@@ -1,0 +1,146 @@
+production_mode: docker run --link YOUR_ELASTICSEARCH_CONTAINER_NAME_OR_ID:elasticsearch -p 5601:5601 {docker-repo}:{version}
+
+docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" --name elastic_s elasticsearch:7.3.2
+docker run --link elastic_s:elasticsearch -p 5601:5601 --name kibana kibana:7.3.2
+docker run --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.2 -e 'input{stdin{}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
+
+docker run --link e_lastic:elasticsearch -h logsatsh --name e_stash logstash:7.3.1 -e 'input{stdin{}}output{stdout{}}'
+
+docker run --link elastic_s:elasticsearch --rm -it -v ~/pipeline/:/usr/share/logstash/pipeline/ logstash:7.3.2 -f /home/user1/logstash_settings_/logstash.conf
+docker run --link elastic_s:elasticsearch  --name=logstash logstash:7.3.2 -e 'input{stdin{}}output{stdout{}}'
+
+docker run --rm -it --link elastic_s:elasticsearch  --name=logstash logstash:7.3.2 -e 'input{stdin{}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
+docker run --rm -it --link elastic_s:elasticsearch  --name=logstash logstash:7.3.2 -e 'input{file{path=>"~/*log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
+
+
+# some script in python to screen docker containers & ports !!! -> dps.py
+
+import os
+import time
+
+while True:
+    os.system('clear')
+    os.system('docker ps -a')
+    print '\n'
+    os.system('netstat -nultp')
+    time.sleep(2)
+
+# --------------------------------------
+#logstash.conf
+input {
+	file {
+		type => "some_access_log"
+		path => ["/home/logs/*.log"]
+		start_position => "end"
+		stat_interval => 2
+		discover_interval => 20
+	}
+}
+output {
+	elasticsearch {
+		type => "custom_log"
+		embedded => false
+		host => "192.168.0.38:5200"
+		index => "log-from-stash-%{+YYYY.MM.dd}"
+	}
+}
+
+# --- 
+
+docker run --name filebeat \
+docker.elastic.co/beats/filebeat:7.3.2 \
+setup -E setup.kibana.host=kibana:5601 \
+-E output.elasticsearch.hosts=["192.168.0.38:9200"] \
+-f /home/filebeat_settings_/filebeast.conf
+
+docker run --rm -it --link elastic_s:elasticsearch \
+-v /home/:/home \
+--name logstash logstash:7.3.2 \
+-f /home/logstash_settings_/logstash.conf
+
+
+filebeat setup --pipelines --modules nginx,system
+-f filebeat setup --pipelines --modules system
+
+# configure filebeat to use pipelines:
+input {
+  beats {
+    port => 5044
+  }
+}
+
+output {
+  if [@metadata][pipeline] {
+    elasticsearch {
+      hosts => "https://061ab24010a2482e9d64729fdb0fd93a.us-east-1.aws.found.io:9243"
+      manage_template => false
+      index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+      pipeline => "%{[@metadata][pipeline]}" 
+      user => "elastic"
+      password => "secret"
+    }
+  } else {
+    elasticsearch {
+      hosts => "https://061ab24010a2482e9d64729fdb0fd93a.us-east-1.aws.found.io:9243"
+      manage_template => false
+      index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+      user => "elastic"
+      password => "secret"
+    }
+  }
+}
+
+
+
+docker run --rm -it -v ~/pipeline/:/usr/share/logstash/pipeline/ --name logstash logstash:7.3.2
+
+docker run --link _container_name_:elasticsearch -h logstash:7.3.2 --name logstash:7.3.1 -v /home:/home logstash:7.3.1 -f /home/user1/Logstash/xmpl.conf
+
+#logstash.yml
+pipeline:
+  batch:
+    size: ${BATCH_SIZE}
+    delay: ${BATCH_DELAY:50}
+node:
+  name: "node_${LS_NODE_NAME}"
+path:
+   queue: "/tmp/${QUEUE_DIR:queue}"
+
+
+# syslog.conf 
+#
+# Sample Logstash configuration for receiving
+# UDP syslog messages over port 514
+
+input {
+  udp {
+    port => 514
+    type => "syslog"
+  }
+}
+
+output {
+  elasticsearch { hosts => ["localhost:9200"] }
+  stdout { codec => rubydebug }
+}
+
+docker run -d \
+  --name=filebeat \
+  --user=root \
+  --volume="$(pwd)/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro" \
+  --volume="/var/lib/docker/containers:/var/lib/docker/containers:ro" \
+  --volume="/var/run/docker.sock:/var/run/docker.sock:ro" \
+  docker.elastic.co/beats/filebeat:7.3.2 filebeat -e -strict.perms=false \
+  -E output.elasticsearch.hosts=["localhost:9200"]
+
+  _____
+
+logstash: docker run --l
+
+sysctl -w vm.max_map_count=262144
+
+java -jar logstash-7.3.1/bin/logstash-7.3.1.jar agent -f ./from_file_to_eSearch.conf
+logstash-7.3.1/bin/logstash agent -f ./from_file_to_eSearch.conf
