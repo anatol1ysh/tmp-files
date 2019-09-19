@@ -1,22 +1,48 @@
-production_mode: docker run --link YOUR_ELASTICSEARCH_CONTAINER_NAME_OR_ID:elasticsearch -p 5601:5601 {docker-repo}:{version}
-
+# run Elasticsearch
 docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" --name elastic_s elasticsearch:7.3.2
+
+# run Kibana
 docker run --link elastic_s:elasticsearch -p 5601:5601 --name kibana kibana:7.3.2
+
+# fetch data from STDIN:
 docker run --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.2 -e 'input{stdin{}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
 
+# fetch data from FILES /usr/share/logstash/*.log :
+docker run --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.2 -e 'input{file{path=>"/usr/share/logstash/*.log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
 
-docker run --link e_lastic:elasticsearch -h logsatsh --name e_stash logstash:7.3.1 -e 'input{stdin{}}output{stdout{}}'
+# run Grafana and forward port (latest + pull garfana/grafana:6.3.5 {6.4.0 - beta version})
+docker run -p 3000:3000 --name grafana grafana/grafana:6.3.5
+
+# log_name
+logstash-2019.09.19-000001
 
 docker run --link elastic_s:elasticsearch --rm -it -v ~/pipeline/:/usr/share/logstash/pipeline/ logstash:7.3.2 -f /home/user1/logstash_settings_/logstash.conf
-docker run --link elastic_s:elasticsearch  --name=logstash logstash:7.3.2 -e 'input{stdin{}}output{stdout{}}'
 
 docker run --rm -it --link elastic_s:elasticsearch  --name=logstash logstash:7.3.2 -e 'input{stdin{}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
 
 docker run --rm -it --link elastic_s:elasticsearch  --name=logstash logstash:7.3.2 -e 'input{file{path=>"~/*log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
 
-
-
 # some script in python to screen docker containers & ports !!! -> dps.py
+
+bash-4.2$ vi out_.py
+from os import system
+from time import sleep
+
+while True:
+    print 'collect some data\n'
+    system('uname -a')
+    system('lscpu')
+    system('uname -a >> main.log')
+    system('uname -a >> top_.log')
+    system('java Util.java Some_message')
+    #system('clear')
+    system('free -l >> main.log')
+    #system('top -d 1 >> main.log')
+    system('vmstat >> main.log')
+    sleep(2)
+~
+
+
 
 import os
 import time
