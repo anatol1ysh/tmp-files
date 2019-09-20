@@ -4,11 +4,61 @@ docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" --name elas
 # run Kibana
 docker run --link elastic_s:elasticsearch -p 5601:5601 --name kibana kibana:7.3.2
 
-# fetch data from STDIN:
-docker run --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.2 -e 'input{stdin{}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
-
 # fetch data from FILES /usr/share/logstash/*.log :
 docker run --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.2 -e 'input{file{path=>"/usr/share/logstash/*.log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+# its WORK !!!
+docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
+docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}filter{dissect{mapping=>{"message"=>"%{_hub_id} %{_resp} %{_state} %{_c} %{_signal} %{_battery_lvl}"}}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
+
+
+# run docker container tomcat (fast port for host connect !!!):
+docker run -p 8888:8080 --rm -it --name=tomcat tomcat:9.0.0
+
+# docker images:
+				REPOSITORY                           TAG                 IMAGE ID            CREATED             SIZE
+				logstash                             7.3.2               ed2f8442f606        13 days ago         739MB
+				kibana                               7.3.2               223b547fdba2        13 days ago         904MB
+				elasticsearch                        7.3.2               d7052f192d01        13 days ago         706MB
+				docker.elastic.co/beats/metricbeat   7.3.2               e78790f70a75        13 days ago         551MB
+				docker.elastic.co/beats/filebeat     7.3.2               d9762ae5f790        13 days ago         383MB
+				grafana/grafana                      6.3.5               2017e5eb53fa        2 weeks ago         261MB
+				tomcat                               9.0.0               273c6a7e33d5        24 months ago       566MB
+
+# filebeat !!!
+
+docker run -d \
+  --name=filebeat \
+  --user=root \
+  --volume="$(pwd)/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro" \
+  --volume="/var/lib/docker/containers:/var/lib/docker/containers:ro" \
+  --volume="/var/run/docker.sock:/var/run/docker.sock:ro" \
+  docker.elastic.co/beats/filebeat:7.3.2 filebeat -e -strict.perms=false \
+  -E output.elasticsearch.hosts=["192.168.0.38:9200"]
+
+# # # #
+
+docker run --name=filebeat \
+docker.elastic.co/beats/filebeat:7.3.2 \
+setup -E setup.kibana.host=kibana:5601 \
+-E output.elasticsearch.hosts=["192.168.0.38:9200"]
+
+# # # #
+
+# fetch log-data from apache tomcat"
+docker run --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.2 -e 'input{tcp{host=>"192.168.0.38:8888"}}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
+input {
+  tcp {
+    type => "apache"
+    port => 3333
+  }
+}
+
+
+# fetch data from STDIN:
+docker run --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.2 -e 'input{stdin{}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
 
 # run Grafana and forward port (latest + pull garfana/grafana:6.3.5 {6.4.0 - beta version})
 docker run -p 3000:3000 --name grafana grafana/grafana:6.3.5
