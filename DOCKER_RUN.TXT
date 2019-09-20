@@ -9,12 +9,12 @@ docker run --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.
 # its WORK !!!
 docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
 
-docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}filter{dissect{mapping=>{"message"=>"%{_hub_id} %{_resp} %{_state} %{_c} %{_signal} %{_battery_lvl}"}}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}filter{dissect{mapping=>{"message"=>"%{hub_id} %{resp} %{state} %{c} %{signal} %{battery_lvl}"}}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
 
 
 
 # run docker container tomcat (fast port for host connect !!!):
-docker run -p 8888:8080 --rm -it --name=tomcat tomcat:9.0.0
+docker run -p 8888:8080 --rm -it --name=tomcsat tomcat:9.0.0
 
 # docker images:
 				REPOSITORY                           TAG                 IMAGE ID            CREATED             SIZE
