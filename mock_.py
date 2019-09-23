@@ -6,7 +6,7 @@ import time
 file_name = "out_mock_py_1.log"
 f = open(file_name, "a+")
 
-hub_state = ["GREEN", "YELLOW", "RED", "PANIC"]
+hub_state = ["GREEN", "YELLOW", "RED"]
 hub_id = [100010000, 100010011, 100010022, 100010033, 100010044, 100010055, 100010066, 100010077, 100010088, 100010099]
 
 main_count = 0
@@ -21,16 +21,15 @@ while True:
     for item in hub_id:
         cnt += 1
         file_reset_counter += 1
+
         # str(datetime.datetime.now().strftime("%Y.%m.%d %H:%M "))
         # f.writelines(" Hub_ID: " + str(item) + " Count_resp: "+ str(random.randrange(511, 2047)) + " State: " + hub_state[random.randrange(0, 4)] + " Count: " + str(cnt) + "  Signal_lvl: " + str(random.randrange(10, 100)) + "%  Battery_lvl: " + str(random.randrange(10, 100)) + "% \n")
         f.writelines(str(item) + " " 
-            + str(random.randrange(511, 2047)) + " "
-            + hub_state[random.randrange(0, 4)] + " " 
+            + str(random.randrange(1000, 1500)) + " "
+            + hub_state[random.randrange(0, 3)] + " " 
             + str(cnt) + " " 
-            + str(random.randrange(10, 100)) + " " 
+            + str(random.randrange(40, 80)) + "dB " 
             + str(random.randrange(10, 100)) + "%\n")
-        #if cnt % 4 == 0:
-         #   f.writelines("........._mess: ........." + str(random.randrange(64, 8192)) + " .............. / ........ ## ........ %% ........ ^^^ ................ \n")
         if main_count == 9999:
             main_count = 0
         

@@ -1,16 +1,74 @@
-# run Elasticsearch
-docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" --name elastic_s elasticsearch:7.3.2
+# run Elasticsearch | also name host -> --hostname=elastic
+docker run --rm -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" --name elastic_s elasticsearch:7.3.2
 
-# run Kibana
-docker run --link elastic_s:elasticsearch -p 5601:5601 --name kibana kibana:7.3.2
+# run Kibana | also name host -> --host=kibana
+docker run --rm --link elastic_s:elasticsearch -p 5601:5601 --name kibana kibana:7.3.2
 
 # fetch data from FILES /usr/share/logstash/*.log :
-docker run --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.2 -e 'input{file{path=>"/usr/share/logstash/*.log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+docker run -p 9600:9600 --rm -it --link elastic_s:elasticsearch --name=logstash logstash:7.3.2 -e 'input{file{path=>"/usr/share/logstash/*.log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
 # its WORK !!!
-docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/mylogs:/newlogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
 
-docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}filter{dissect{mapping=>{"message"=>"%{hub_id} %{resp} %{state} %{c} %{signal} %{battery_lvl}"}}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/new_logs:/newlogs --name=logstash_new logstash:7.3.2 -e 'input{file{path=>"/newlogs/*.log"}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
 
+docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}filter{grok{match=>{"message"=>"%{NUMBER:bytes}" }}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
+docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}filter{grok{match=>{"message"=>"%{([100010000-100010099]):hubs}"}}}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
+docker run --rm -it --link elastic_s:elasticsearch --user=root -v /home/user1/script_:/mylogs --name=logstash logstash:7.3.2 -e 'input{file{path=>"/mylogs/*.log"}}filter{grok{match=>{"message"=>"%{QS:hubs}"}}}}output{elasticsearch{hosts=>"192.168.0.38:9200"}}'
+
+filter{grok{match=>{"message"=>"%{NUMBER:bytes}" }}}
+
+filter{grok{match=>{"message"=>"%{([100010000-100010099]):bytes}"}}}
+
+(?:[+-]?(?:[0-9]+))
+
+filter{grok{match=>{"message"=>"%{NUMBER:bytes}%{NUMBER%:cpu%}"}}}
+
+message: 10f73d13c2b9        kibana              0.08%               331.1MiB / 7.79GiB   4.15%               64.6MB / 20.8MB     655kB / 8.19kB
+filter{grok{match=>{"message"=>"%{USER:service_name}%{POSINT:pos_int}"}}}
+
+message: 100010055 1330 RED 6 73dB 69%
+filter{grok{match=>{"message"=>"%{NUMBER:hub_id}%{WORD:state_hub}%{SECOND:some_count}}}}
+
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "range": {
+            "client_addr": {
+              "gte": "0.0.0.0",
+              "lt": "100.0.0.0"
+            }
+          }
+        },
+        {
+          "range": {
+            "server_addr": {
+              "gte": "0.0.0.0",
+              "lt": "100.0.0.0"
+            }
+          }
+        }
+      ],
+      "minimum_should_match": 1
+    }
+  }
+}
+
+filter {
+      grok {
+        match => { "message" => "%{IP:client} %{WORD:method} %{URIPATHPARAM:request} %{NUMBER:bytes} %{NUMBER:duration}" }
+    }
+}
+
+docker run --rm --hostname=m_beat \
+--name=metricbeat \
+docker.elastic.co/beats/metricbeat:7.3.2 \
+setup -E setup.kibana.host=kibana:5601 \
+-E output.elasticsearch.hosts=["elastic:9200"]
 
 
 # run docker container tomcat (fast port for host connect !!!):

@@ -1,0 +1,10 @@
+10f73d13c2b9        kibana              1.26%               320.1MiB / 7.79GiB   4.01%               258MB / 58.6MB      655kB / 8.19kB      22
+c50059cf272b        elastic_s           0.42%               1.46GiB / 7.79GiB    18.75%              116MB / 277MB       311kB / 616MB       70
+CONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT    MEM %               NET I/O             BLOCK I/O           PIDS
+f1311c545200        logstash_new        0.90%               823.1MiB / 7.79GiB   10.32%              5.82MB / 18.1MB     0B / 20.8MB         43
+10f73d13c2b9        kibana              0.36%               322.9MiB / 7.79GiB   4.05%               263MB / 61.5MB      655kB / 8.19kB      22
+c50059cf272b        elastic_s           0.65%               1.46GiB / 7.79GiB    18.75%              120MB / 282MB       311kB / 616MB       70
+CONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT    MEM %               NET I/O             BLOCK I/O           PIDS
+f1311c545200        logstash_new        0.71%               823.1MiB / 7.79GiB   10.32%              5.82MB / 18.1MB     0B / 20.8MB         43
+10f73d13c2b9        kibana              0.73%               322.4MiB / 7.79GiB   4.04%               263MB / 61.5MB      655kB / 8.19kB      22
+c50059cf272b        elastic_s           1.32%               1.46GiB / 7.79GiB    18.75%              120MB / 282MB       311kB / 616MB       70
